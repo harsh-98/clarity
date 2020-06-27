@@ -182,7 +182,7 @@ describe("M of N Escrow Contract test suite", () => {
 
   describe("Second escrow Account with 3-of-4.", () => {
     it("create second account and add 2 participants", async () => {
-      let result = await escrowClient.createAccount(addrs[0], {m: "u2",n:"u4"});
+      let result = await escrowClient.createAccount(addrs[0], {m: "u3",n:"u4"});
       assert.equal(result, "u2");
       result = await escrowClient.addParticipant({sender: addrs[0], accountNumber: "u2", participant: addrs[1]});
       assert.equal(result, "true");
@@ -199,12 +199,13 @@ describe("M of N Escrow Contract test suite", () => {
       assert.equal(result, "true");
       result = await escrowClient.addParticipant({sender: addrs[0], accountNumber: "u2", participant: addrs[4]});
       assert.equal(result, "true");
-      it("Set receiver and check if the value matches", async () => {
-        const result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u2", receiver: addrs[5]});
-        assert.equal(result, `true`);
-      });
-      
     });
+    it("Set receiver and check if the value matches", async () => {
+        let  result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u2", receiver: addrs[5]});
+        assert.equal(result, `true`);
+        result = await escrowClient.getReceiver("u2");
+        assert.equal(result, `(ok ${addrs[5]})`);
+      });
   });
 
   describe("Check signatures feature", () => {
@@ -224,6 +225,58 @@ describe("M of N Escrow Contract test suite", () => {
       assert.equal(result, "true");
       result = await escrowClient.getSignatures("u2");
       assert.equal(result, `(ok (${addrs[1]} ${addrs[2]}))`);
+    });
+  });
+  describe("Withdraw by receiver", () => {
+    it("Try to withdraw with 2 signatures instead of 3 fails with errorcode 11", async () => {
+      let result = await escrowClient.deposit({sender: addrs[1], accountNumber: "u2", amount:"u2000"});
+      assert.equal(result, `true`);
+      result = await escrowClient.withdraw({sender: addrs[5], accountNumber: "u2", amount: "u1000"});
+      // errorcode 11 means not-enough-signatures 
+      assert.equal(result, "11");
+    });
+
+    it("add 1 more signature and withdraw", async () => {
+
+      let result = await escrowClient.addSignature({sender: addrs[3], accountNumber: "u2"});
+      assert.equal(result, "true");
+
+      // get signature can check the added 3 signatures
+      result = await escrowClient.getSignatures("u2");
+      assert.equal(result, `(ok (${addrs[1]} ${addrs[2]} ${addrs[3]}))`);
+
+      // if balance is there, tx-sender is receiver, minimum m signatures are there
+      // then funds can be withdraw by receiver 
+      result = await escrowClient.withdraw({sender: addrs[5], accountNumber: "u2", amount: "u1000"});
+      assert.equal(result, "true");
+    });
+
+    it("non-receiver trying to withdraw fails with errorcode 12", async () => {
+    
+    let result = await escrowClient.withdraw({sender: addrs[1], accountNumber: "u2", amount: "u1000"});
+    // errorcode 12 means not-receiver-of-account
+    assert.equal(result, "12");
+    });
+    it("try to withdraw more than balance", async () => {
+    
+    let result = await escrowClient.withdraw({sender: addrs[5], accountNumber: "u2", amount: "u2000"});
+    // errorcode 13 means not-enough-balance
+    assert.equal(result, "13");
+    });
+
+    it("empty account and check balance", async () => {
+    
+    let result = await escrowClient.withdraw({sender: addrs[5], accountNumber: "u2", amount: "u1000"});
+    assert.equal(result, "true");
+
+    result = await escrowClient.getBalance("u2");
+    assert.equal(result, "(ok u0)");
+    });
+    it("trying to withdraw from empty account returns 13", async () => {
+    
+    let result = await escrowClient.withdraw({sender: addrs[5], accountNumber: "u2", amount: "u1000"});
+    // errorcode 13 means not-enough-balance 
+    assert.equal(result, "13");
     });
   });
   after(async () => {

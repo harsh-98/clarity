@@ -74,6 +74,13 @@ class EscrowClient extends Client {
           args: [accountNumber, amount],
         });
       }
+    async withdraw({sender, accountNumber, amount}) {
+        return await this.submitTx({
+          method: "withdraw",
+          sender,
+          args: [accountNumber, amount],
+        });
+      }
     async getReceiver(accountNumber: string) {
         return await this.query({
           method: "get-receiver",

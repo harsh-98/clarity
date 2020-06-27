@@ -64,6 +64,9 @@
 (define-constant is-not-participant (err 8))
 (define-constant signature-already-present (err 9))
 (define-constant unknown-error (err 10))
+(define-constant not-enough-signatures (err 11))
+(define-constant not-receiver-of-account (err 12))
+(define-constant not-enough-balance (err 13))
 
 (define-public (get-participants (account-no uint))
    (ok 
@@ -125,16 +128,19 @@
    )
 )
 
+(define-private (is-receiver (account-no uint))
+   (match (get receiver 
+            (map-get? account-receiver ((account account-no)) )
+           )
+      receiver (if (is-eq receiver tx-sender) true false)
+      false
+   )
+)
+
 ;; adding participants to account-participant
 (define-public (add-participant (account-no uint) (participant principal))
    ;; https://docs.blockstack.org/core/smart/clarityref#default-to
-   (let ((n 
-            (default-to u0
-               (get n
-                  (map-get? account-n ((account account-no)) ) 
-               )
-            )
-         ))
+   (let ((n (unwrap! (get-n account-no) account-not-defined)))
          (if (is-owner account-no)
             (let ((participants 
                      (default-to 
@@ -188,7 +194,11 @@
                   (asserts! (not (contains tx-sender signatures)) signature-already-present)
                   (match (as-max-len? (concat signatures (list tx-sender)) u10)
                      all-signatures
-                     (ok (map-set account-signatures {account: account-no} {signatures: all-signatures}))
+                     (ok (map-set account-signatures 
+                           {account: account-no} 
+                           {signatures: all-signatures}
+                         )
+                     )
                   participant-length-exceed)
                )
             is-not-participant)
@@ -220,6 +230,31 @@
             )
       )
   )
+)
+
+(define-public (withdraw (account-no uint) (amount uint))
+   (begin
+      (let ((ss (unwrap! (get-signatures account-no) unknown-error))
+            (m (unwrap! (get-m account-no) account-not-defined))
+            (balance (unwrap! (get-balance account-no) unknown-error))
+            )
+            (ok (len ss))
+            (if (is-eq m (len ss))
+               (if (is-receiver account-no)
+                  (if (and (not (is-eq balance u0)) (<= amount balance))
+                     (begin
+                        (stx-transfer? balance .m-of-n-escrow tx-sender)
+                        (ok (map-set account-balance 
+                              ((account account-no)) 
+                              ((balance (- balance amount))) 
+                           )
+                        )
+                     )
+                  not-enough-balance)
+               not-receiver-of-account)
+            not-enough-signatures)
+      )
+   )
 )
 
 (define-public (set-receiver (account-no uint) (receiver principal))
