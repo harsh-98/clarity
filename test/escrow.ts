@@ -21,6 +21,31 @@ class EscrowClient extends Client {
           method: "get-open-accounts",
           args: [],
         });
+    }
+    async getParticipants(accountNumber: string) {
+        return await this.query({
+          method: "get-participants",
+          args: [accountNumber],
+        });
+    }
+    async getN(accountNumber: string) {
+        return await this.query({
+          method: "get-n",
+          args: [accountNumber],
+        });
+    }
+    async getM(accountNumber: string) {
+        return await this.query({
+          method: "get-m",
+          args: [accountNumber],
+        });
+    }
+    async addParticipant({sender, accountNumber, participant}) {
+        return await this.submitTx({
+          method: "add-participant",
+          sender,
+          args: [accountNumber, `'${participant}`],
+        });
       }
 
 }

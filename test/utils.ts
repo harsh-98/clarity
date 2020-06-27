@@ -26,9 +26,10 @@ async function submitTx(client, { method, args = [], sender }) {
     if (receipt.success) {
       return extractResp(receipt.result);
     } else {
-      // console.log(receipt);
       const errCode = extractErrorCode(receipt.error.commandOutput);
-      throw new Error(errCode || receipt.error);
+    //   console.log(errCode);
+      console.log(receipt);
+      return errCode ;
     }
   }
   async function query(client, { method, args = [] }) {
