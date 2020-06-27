@@ -28,6 +28,12 @@ class EscrowClient extends Client {
           args: [accountNumber],
         });
     }
+    async getSignatures(accountNumber: string) {
+        return await this.query({
+          method: "get-signatures",
+          args: [accountNumber],
+        });
+    }
     async getN(accountNumber: string) {
         return await this.query({
           method: "get-n",
@@ -45,6 +51,13 @@ class EscrowClient extends Client {
           method: "add-participant",
           sender,
           args: [accountNumber, `'${participant}`],
+        });
+      }
+    async addSignature({sender, accountNumber}) {
+        return await this.submitTx({
+          method: "add-signature",
+          sender,
+          args: [accountNumber],
         });
       }
     async setReceiver({sender, accountNumber, receiver}) {

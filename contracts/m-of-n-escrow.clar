@@ -60,6 +60,10 @@
 (define-constant account-not-defined (err 4))
 (define-constant receiver-already-set (err 5))
 (define-constant receiver-not-set (err 6))
+(define-constant not-all-participants-added (err 7))
+(define-constant is-not-participant (err 8))
+(define-constant signature-already-present (err 9))
+(define-constant unknown-error (err 10))
 
 (define-public (get-participants (account-no uint))
    (ok 
@@ -67,6 +71,17 @@
          (list)
          (get participants 
             (map-get? account-participants {account: account-no})
+         )
+      )
+   )
+)
+
+(define-public (get-signatures (account-no uint))
+   (ok 
+      (default-to 
+         (list)
+         (get signatures
+            (map-get? account-signatures {account: account-no})
          )
       )
    )
@@ -129,7 +144,7 @@
                   ))
                (begin
                   (asserts! (not (contains participant participants)) participant-already-present)
-                  (match (as-max-len? (append participants participant) u10)
+                  (match (as-max-len? (concat participants (list participant)) u10)
                            all-participants
                            (if (<= (len all-participants) n) 
                               (ok (map-set account-participants {account: account-no} {participants: all-participants}))
@@ -140,6 +155,45 @@
                )
             )
          not-owner-of-account)
+   )
+)
+
+(define-private (participant-check 
+                  (y principal)
+                  (to-check { p: principal, result: bool }))
+   (if (get result to-check)
+        to-check
+        { p: (get p to-check),
+          result: (is-eq (get p to-check) y) }))
+
+(define-private (is-participant (find-in (list 10 principal)))
+   (get result (fold contains-check find-in
+    { p: tx-sender, result: false })))
+
+;; add signatures to account
+(define-public (add-signature (account-no uint))
+   (begin
+      (let ((ps (unwrap! (get-participants account-no) unknown-error))
+            (m (unwrap! (get-m account-no) account-not-defined))
+            (n (unwrap! (get-n account-no) account-not-defined))
+            )
+         (if (is-eq n (len ps) )
+            (if (is-participant ps)
+               (let ((signatures
+                     (default-to 
+                        (list)
+                        (get signatures (map-get? account-signatures { account: account-no }))
+                     )
+                  ))
+                  (asserts! (not (contains tx-sender signatures)) signature-already-present)
+                  (match (as-max-len? (concat signatures (list tx-sender)) u10)
+                     all-signatures
+                     (ok (map-set account-signatures {account: account-no} {signatures: all-signatures}))
+                  participant-length-exceed)
+               )
+            is-not-participant)
+         not-all-participants-added)
+      )
    )
 )
 
