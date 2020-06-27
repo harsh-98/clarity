@@ -5,7 +5,7 @@
 (define-map account-signatures
    ((account uint)) ((signatures (list 10 principal))))
 
-(define-data-var total-open-accounts uint u0)
+(define-data-var open-accounts uint u0)
 
 (define-map account-m
    ((account uint)) ((m uint)) )
@@ -17,6 +17,7 @@
    ((account uint)) ((owner principal)) )
 
 ;; public functions
+(define-read-only (get-open-accounts) (var-get open-accounts))
 
 (define-public (create (m uint) (n uint))
    (begin
@@ -25,7 +26,7 @@
             (<= m n)
             (> m u0)
          )
-         (let ((account-no (+ (var-get total-open-accounts) u1) )) 
+         (let ((account-no (+ (var-get open-accounts) u1) )) 
             (begin
                (map-set account-m
                   ((account account-no))
@@ -33,7 +34,7 @@
                (map-set account-n
                   ((account account-no))
                   ((n n)) )
-               (var-set total-open-accounts account-no)
+               (var-set open-accounts account-no)
                (map-set account-owner ((account account-no)) ((owner tx-sender)) )
                (ok account-no)
             )

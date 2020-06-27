@@ -16,6 +16,13 @@ class EscrowClient extends Client {
           args: [m,n],
         });
       }
+    async getOpenAccounts() {
+        return await this.query({
+          method: "get-open-accounts",
+          args: [],
+        });
+      }
+
 }
 
 export {EscrowClient};
