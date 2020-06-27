@@ -1,0 +1,1 @@
+{"mnemonic":"bird limb step enact spider absorb sand utility friend beach deposit achieve word head dove bind daring eight distance dismiss fitness control endless tray","keyInfo":{"privateKey":"cc9c0cf1787f70367a3bd0a54ed4cc8757e0d97e90a656bd643df4abce03389b01","address":"ST1R80B269Z26EJDF1EPC80WH6AFE6ATXE6YBEDZ1","btcAddress":"mqmoX9k99yvnq6fbhsa1w9dsr6hHMxzGJ9","index":0}}
