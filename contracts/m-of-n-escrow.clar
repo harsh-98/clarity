@@ -191,3 +191,12 @@
             receiver (ok receiver)
             receiver-not-set)
 )
+
+(define-public (get-balance (account-no uint))
+   (match (get balance 
+            (map-get? account-balance ((account account-no)) )
+         )
+   balance (ok balance)
+   (ok u0)
+   )
+)

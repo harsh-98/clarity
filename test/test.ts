@@ -95,12 +95,14 @@ describe("M of N Escrow Contract test suite", () => {
       // this call returns error code 3, which means the participant is already present.
       assert.equal(result, "1");
     });
-
     it("get participants for escrow account 1", async () => {
       // for passing uint prefix with u and for principal prefix with u
       const result = await escrowClient.getParticipants("u1");
       assert.equal(result, `(ok (${addrs[1]}))`);
     });
+  });
+    describe("setting receiver address for escrow account", () => {
+
 
     it("receiver not set before the owner sets it", async () => {
       // for passing uint prefix with u and for principal prefix with u
@@ -125,6 +127,34 @@ describe("M of N Escrow Contract test suite", () => {
       assert.equal(result, `5`);
     });
 
+  });
+  describe("deposit amount in the escrow account", () => {
+    it("check balance before adding balance", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.getBalance("u1");
+      assert.equal(result, `(ok u0)`);
+    });
+    it("deposit amount", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.deposit({sender: addrs[2], accountNumber: "u1", amount:"u1000"});
+      assert.equal(result, `true`);
+    });
+    it("check balance after first deposit", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.getBalance("u1");
+      assert.equal(result, `(ok u1000)`);
+    });
+
+    it("check if anyone can deposit", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.deposit({sender: addrs[3], accountNumber: "u1", amount:"u1000"});
+      assert.equal(result, `true`);
+    });
+    it("check balance after second deposit", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.getBalance("u1");
+      assert.equal(result, `(ok u2000)`);
+    });
   });
   after(async () => {
     await provider.close();
