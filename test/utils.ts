@@ -28,7 +28,7 @@ async function submitTx(client, { method, args = [], sender }) {
     } else {
       const errCode = extractErrorCode(receipt.error.commandOutput);
     //   console.log(errCode);
-      console.log(receipt);
+    //   console.log(receipt);
       return errCode ;
     }
   }

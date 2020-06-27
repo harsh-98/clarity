@@ -47,6 +47,19 @@ class EscrowClient extends Client {
           args: [accountNumber, `'${participant}`],
         });
       }
+    async setReceiver({sender, accountNumber, receiver}) {
+        return await this.submitTx({
+          method: "set-receiver",
+          sender,
+          args: [accountNumber, `'${receiver}`],
+        });
+      }
+    async getReceiver(accountNumber: string) {
+        return await this.query({
+          method: "get-receiver",
+          args: [accountNumber],
+        });
+      }
 
 }
 

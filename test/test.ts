@@ -26,7 +26,7 @@ describe("M of N Escrow Contract test suite", () => {
       await escrowClient.deployContract();
     });
 
-    it("check number of open accounts after contract deployment ", async () => {
+    it("check number of open accounts after contract deployment, which should be 0 ", async () => {
       // for passing uint prefix with u and for principal prefix with u
       const result = await escrowClient.getOpenAccounts();
       assert.equal(result, "u0");
@@ -50,7 +50,7 @@ describe("M of N Escrow Contract test suite", () => {
 
     it("check number of open accounts after creating an escrow account", async () => {
       // for passing uint prefix with u and for principal prefix with u
-      const result = await escrowClient.createAccount(addrs[0], {m: "u2",n:"u3"});
+      const result = await escrowClient.createAccount(addrs[0], {m: "u1",n:"u1"});
       assert.equal(result, "u1");
     });
 
@@ -58,14 +58,14 @@ describe("M of N Escrow Contract test suite", () => {
       // for passing uint prefix with u and for principal prefix with u
       const result = await escrowClient.getM("u1");
       // errorcode 4 means that the account is not defined
-      assert.equal(result, "(ok u2)");
+      assert.equal(result, "(ok u1)");
     });
 
     it("check N of created escrow account ", async () => {
       // for passing uint prefix with u and for principal prefix with u
       const result = await escrowClient.getN("u1");
       // errorcode 4 means that the account is not defined
-      assert.equal(result, "(ok u3)");
+      assert.equal(result, "(ok u1)");
     });
   
     it("check participants before adding them", async () => {
@@ -89,22 +89,40 @@ describe("M of N Escrow Contract test suite", () => {
       assert.equal(result, "3");
     });
     it("Non-owner account is trying to add participants. This returns errorcode 1.", async () => {
-      // for passing uint prefix with u and for principal prefix with u
+      // for passing uint prefix with u and for principal prefix with '
       const result = await escrowClient.addParticipant({sender: addrs[1], accountNumber: "u1", participant: addrs[2]});
       
       // this call returns error code 3, which means the participant is already present.
       assert.equal(result, "1");
     });
 
-
-    it("Adding 2 more participants to 2-of-3 escrow Account.", async () => {
+    it("get participants for escrow account 1", async () => {
       // for passing uint prefix with u and for principal prefix with u
-      let result1 = await escrowClient.addParticipant({sender: addrs[0], accountNumber: "u1", participant: addrs[3]});
-      assert.equal(result1, "true");
-      
-      // let result2 = await escrowClient.addParticipant({sender: addrs[0], accountNumber: "u1", participant: addrs[3]});
-      // assert.equal(result2, "true");
+      const result = await escrowClient.getParticipants("u1");
+      assert.equal(result, `(ok (${addrs[1]}))`);
+    });
 
+    it("receiver not set before the owner sets it", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.getReceiver("u1");
+      assert.equal(result, `(err 6)`);
+    });
+
+    it("only owner can set the receiver address", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.setReceiver({sender: addrs[1], accountNumber: "u1", receiver: addrs[4]});
+      assert.equal(result, `1`);
+    });
+    it("Set receiver and check if the value matches", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]});
+      assert.equal(result, `true`);
+    });
+    it("Even owner can't set the receiver address twice", async () => {
+      // for passing uint prefix with u and for principal prefix with u
+      const result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]});
+      // errorcode 5 means receiver address is already set
+      assert.equal(result, `5`);
     });
 
   });
