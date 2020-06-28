@@ -28,6 +28,18 @@ class EscrowClient extends Client {
     		args: [accountNumber],
     	})
     }
+    async getBlockHeight(accountNumber: string) {
+    	return await this.query({
+    		method: "get-block-height",
+    		args: [accountNumber],
+    	})
+    }
+    async getChainHeight() {
+    	return await this.query({
+    		method: "get-chain-height",
+    		args: [],
+    	})
+    }
     async getSignatures(accountNumber: string) {
     	return await this.query({
     		method: "get-signatures",

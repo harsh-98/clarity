@@ -28,19 +28,16 @@ describe("M of N Escrow Contract test suite", () => {
 		})
 
 		it("check number of open accounts after contract deployment, which should be 0 ", async () => {
-			// for passing uint prefix with u and for principal prefix with u
 			const result = await escrowClient.getOpenAccounts()
 			assert.equal(result, "u0")
 		})
 		it("check M of undefined escrow account ", async () => {
-			// for passing uint prefix with u and for principal prefix with u
 			const result = await escrowClient.getM("u1")
 			// errorcode 4 means that the account is not defined
 			assert.equal(result, "(err 4)")
 		})
 
 		it("check N of undefined escrow account ", async () => {
-			// for passing uint prefix with u and for principal prefix with u
 			const result = await escrowClient.getN("u1")
 			// errorcode 4 means that the account is not defined
 			assert.equal(result, "(err 4)")
@@ -52,20 +49,20 @@ describe("M of N Escrow Contract test suite", () => {
 	describe("create first m-of-n escrow account", () => {
 
 		it("check number of open accounts after creating an escrow account", async () => {
-			// for passing uint prefix with u and for principal prefix with u
+			// open a new escrow account 2-of-3
 			const result = await escrowClient.createAccount(addrs[0], {m: "u2",n:"u3"})
 			assert.equal(result, "u1")
 		})
 
 		it("check M of created escrow account ", async () => {
-			// for passing uint prefix with u and for principal prefix with u
+			// get M for the account 1
 			const result = await escrowClient.getM("u1")
 			// errorcode 4 means that the account is not defined
 			assert.equal(result, "(ok u2)")
 		})
 
 		it("check N of created escrow account ", async () => {
-			// for passing uint prefix with u and for principal prefix with u
+			// get N for the account 1
 			const result = await escrowClient.getN("u1")
 			// errorcode 4 means that the account is not defined
 			assert.equal(result, "(ok u3)")
@@ -74,13 +71,12 @@ describe("M of N Escrow Contract test suite", () => {
 
 	describe("check adding participants", () => {
 		it("check participants before adding them to account 1", async () => {
-			// for passing uint prefix with u and for principal prefix with u
+			// check participants list for account 1
 			const result = await escrowClient.getParticipants("u0")
 			assert.equal(result, "(ok ())")
 			// assert.equal(result, "u1");
 		})
 		it("add participants to account 1", async () => {
-			// for passing uint prefix with u and for principal prefix with '
 			const result = await escrowClient.addParticipant({sender: addrs[0], accountNumber: "u1", participant: addrs[1]})
       
 			// returns true as the participant is added
@@ -94,7 +90,7 @@ describe("M of N Escrow Contract test suite", () => {
 			assert.equal(result, "3")
 		})
 		it("Non-owner account is trying to add participants. This returns errorcode 1.", async () => {
-			// for passing uint prefix with u and for principal prefix with '
+			// only owner can et the participants of contract
 			const result = await escrowClient.addParticipant({sender: addrs[1], accountNumber: "u1", participant: addrs[2]})
       
 			// this call returns error code 1, which means sender is not the owner of account.
@@ -142,16 +138,19 @@ describe("M of N Escrow Contract test suite", () => {
 			const result = await escrowClient.setReceiver({sender: addrs[1], accountNumber: "u1", receiver: addrs[4]})
 			assert.equal(result, "1")
 		})
-		it("Set receiver and check if the value matches", async () => {
-			const result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]})
+
+		it("Set receiver and check if the receiver and block-height for account are set", async () => {
+			let result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]})
 			assert.equal(result, "true")
+			result = await escrowClient.getBlockHeight("u1")
+			assert.notEqual(result, "(ok u0)")
 		})
-		it("even owner can't set the receiver address twice", async () => {
+ 
+		it("even owner can't set the receiver address twice within same epoch", async () => {
 			const result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]})
 			// errorcode 5 means receiver address is already set
 			assert.equal(result, "5")
 		})
-
 	})
   
 	describe("deposit amount in the escrow account", () => {
@@ -176,7 +175,39 @@ describe("M of N Escrow Contract test suite", () => {
 			const result = await escrowClient.getBalance("u1")
 			assert.equal(result, "(ok u2000)")
 		})
-	})
+  })
+
+	describe("Next epoch", () => {
+    const HEIGHT_PER_EPOCH =10
+
+    it("Add signatures for current epoch.", async () => {
+			const result = await escrowClient.addSignature({sender: addrs[1], accountNumber: "u1"})
+			assert.equal(result, "true")
+    })
+
+    it("Once every epoch, owner can set address and get new height", async () => {
+      // get old height for account 1
+      let oldheight = await escrowClient.getBlockHeight("u1")
+      assert.notEqual(oldheight, "(ok u0)")
+
+      // enter new epoch by increasing blockchain height by 10
+			for(let i=0 ; i < HEIGHT_PER_EPOCH-5; i++) {
+        await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]})
+      }
+
+			// set address in next epoch
+			let result = await escrowClient.setReceiver({sender: addrs[0], accountNumber: "u1", receiver: addrs[4]})
+			assert.equal(result, "true")
+			// set new height set by calling set-receiver
+      result = await escrowClient.getBlockHeight("u1")
+      // check if the height for account has changed or not
+			assert.notEqual(oldheight, result)
+    })
+    it("Every new signatures are reset.", async () => {
+    let result = await escrowClient.getSignatures("u2")
+    assert.equal(result, `(ok ())`)
+  })
+  })
 
 	describe("Second escrow Account with 3-of-4.", () => {
 		it("create second account and add 2 participants", async () => {

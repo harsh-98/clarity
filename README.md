@@ -1,7 +1,18 @@
 # M-of-N Escrow Contract
-This contract is written in clarity is extending basic [escrow@friedger](https://github.com/friedger/clarity-smart-contracts/blob/master/contracts/tokens/escrow.clar). 
+This contract is written in clarity extending basic [escrow@friedger](https://github.com/friedger/clarity-smart-contracts/blob/master/contracts/tokens/escrow.clar). 
 
-### New features:
+## Importance
+This escrow contract has functionalities designed for various use-cases. The main idea behind it, is importance of  the consensus of atleast M participants among N for moving the funds in a transparent way.
+
+People providing donation to NGOs and relief committee, put their trust in its members. But due to  bureaucracy, most members doesn't have say in how money is used. By bringing m-of-n escrow contract in picture, consensus is required for spending money. 
+
+It can also be used for children' banking account, where atleast one of the parent consent is required for spending fund.    
+
+Millennials have poor savings option (401k or IRA), which doesn't have good yield. Also in crypto due to volatility, FUD happens and even hodlers make wrong decisions. Having a escrow crypto account with let's say 5 friends that require alteast 3 to liquidate 10% crypto to fait.
+
+Other benefit of this escrow contract is participants can decided how to spend money. Funds can be divided in small chunks and participants as a group can decide where to spent them, like 30% on health, 40% on lifestyle and 30% on saving.
+
+### Features:
 
 - Instead of having fixed m and n for escrow, this values can now be defined by users for their use-case. Since clarity doesn't allow list with arbitary length. The upper cap for m and n is 10.
 
@@ -11,7 +22,13 @@ This contract is written in clarity is extending basic [escrow@friedger](https:/
 
 - Receiver address is set before depositing. Trying to deposit before setting receiver address, will error with `receiver-not-set`. This uses the participants the fixability to backout if the receiver is not whom they want.
 
+- In escrow contract, time is divided in epoch with 10 blocks per epoch. One can think of epoch as round within which participants perform consensus for doing some action.
+
+- Receiver address can be set once per epoch, if the consensus is not there this epoch for sending funds to someone. Owner can change the addres next epoch.
+
 ## Outline of contract
+### Const data
+- `height-per-epoch`: Blockchain time is divided in epoch, per epoch some height is set. Currently there are 10 blocks per epoch. Each epoch is like a round, where receiver address can be set and new signatures are needed for performing new acction. Owner set the receiver address, but if the consensus is not there or by mistake wrong receiver is set, the receiver can be changed after epoch.
 
 ### Public functins exposed
 
@@ -33,7 +50,8 @@ This functions are capable of modifying the data stored by the contract.
 - `add-signatures`: for adding signatures, which are required for approving the transfer of funds to receiver.
 - `deposit`: this can be called by anyone to add funds. Keeping it open is important for use-case like a climate relief or health crisis. The general public can deposit to this account if they believe in the majority of participants for spending the funds for mentioned cause.
 - `withdraw`: Receiver address set can withdraw funds.
-- `set-receiver`: It is done before depositing funds so that participants can backout if they don't funds to be used for this.
+- `set-receiver`: It is done before depositing funds so that participants can backout if they don't funds to be used for this. If consensus is not there, participants can pariticpate again in the next epoch. As once every epoch the receiver address can be changed.
+
 
 #### Errors
 |  Errorcode   |     Meaning                    |
@@ -51,11 +69,12 @@ This functions are capable of modifying the data stored by the contract.
 | 11 | not-enough-signatures      |
 | 12 | not-receiver-of-account    |
 | 13 | not-enough-balance     |
+| 14 | block-height-not-set |
 
 ### Testing module
 Clarity is among best contract languages with primarily focus on security and writting robust contract logic. It's project skeleton comes with testing modules.
 
-I have written test for testing varies functionalities of the escrow account.
+I have written test for testing various functionalities of the escrow account.
 
 ![test-result](docs/test.png)
 

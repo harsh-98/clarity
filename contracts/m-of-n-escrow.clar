@@ -25,7 +25,12 @@
 ;; account owner is tx-sender which creates the contract
 (define-map account-owner
    ((account uint)) ((owner principal)) )
+;; store block height at which receiver is set
+(define-map account-height
+   ((account uint)) ((height uint)) )
 
+;; const
+(define-constant height-per-epoch u10)
 
 ;; error codes
 (define-constant not-owner-of-account (err 1))
@@ -41,6 +46,7 @@
 (define-constant not-enough-signatures (err 11))
 (define-constant not-receiver-of-account (err 12))
 (define-constant not-enough-balance (err 13))
+(define-constant block-height-not-set (err 14))
 
 ;; private functions
 ;; these are called from within the contract via other functions
@@ -99,7 +105,53 @@
     { p: tx-sender, result: false })))
 
 
+;; for setting block height for account
+(define-private (set-block-height (account-no uint))
+   (map-set account-height {account: account-no} {height: block-height})
+)  
+;; sets both receiver and block-height
+(define-private (set-receiver-and-height (account-no uint) (receiver principal))
+   (begin
+      (map-set account-signatures {account: account-no} {signatures: (list)})
+      (set-block-height account-no)
+      (ok (map-set account-receiver
+            ((account account-no))
+            ((receiver receiver))
+         )
+      )
+   )
+)
 
+;; set only if atleast one epoch time has past since
+;; last time when receiver address was set
+(define-private (set-if-next-epoch (account-no uint) (receiver principal))
+   (begin
+      (let ((height (default-to u0
+                     (get height 
+                        (map-get? account-height
+                           ((account account-no))
+                        )
+                     )
+                  )
+            ))
+         (if (<= height-per-epoch (- block-height height))
+            (set-receiver-and-height account-no receiver)
+            receiver-already-set)
+      )
+   )
+)
+
+;; get height when the receiver was last set
+(define-public (get-block-height (account-no uint))
+   (match (get height (map-get? account-height {account: account-no}))
+         output (ok output)
+         block-height-not-set
+   )
+)
+;; get blockchain height
+(define-public (get-chain-height)
+   (ok block-height)
+)
 
 
 
@@ -281,13 +333,14 @@
       (let ((ss (unwrap! (get-signatures account-no) unknown-error))
             (m (unwrap! (get-m account-no) account-not-defined))
             (balance (unwrap! (get-balance account-no) unknown-error))
+            (sender tx-sender)
             )
             (ok (len ss))
             (if (is-eq m (len ss))
                (if (is-receiver account-no)
                   (if (and (not (is-eq balance u0)) (<= amount balance))
                      (begin
-                        (stx-transfer? balance .m-of-n-escrow tx-sender)
+                        (as-contract (stx-transfer? balance .m-of-n-escrow sender))
                         (ok (map-set account-balance 
                               ((account account-no)) 
                               ((balance (- balance amount))) 
@@ -315,12 +368,9 @@
          (map-get? account-receiver 
             ((account account-no)) )
             ;; if already set return error
-         prev-receiver receiver-already-set
+         prev-receiver (set-if-next-epoch account-no receiver)
          ;; if not set set the receiver principal
-         (ok (map-set account-receiver
-            ((account account-no))
-            ((receiver receiver))
-         ))
+         (set-receiver-and-height account-no receiver)
       )
    not-owner-of-account)
 )
