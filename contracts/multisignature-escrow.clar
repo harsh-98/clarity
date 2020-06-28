@@ -1,10 +1,10 @@
 ;; Storage
 ;; total number of open accounts
 (define-data-var open-accounts uint u0)
-;; map of participants for each account , it represents N address in m-of-n escrow
+;; map of participants for each account , it represents N address in multisignature escrow
 (define-map account-participants
    ((account uint)) ((participants (list 10 principal))))
-;; map of signatues for each account , it represents M address in m-of-n escrow
+;; map of signatues for each account , it represents M address in multisignature escrow
 (define-map account-signatures
    ((account uint)) ((signatures (list 10 principal))))
 ;; it stores m for each account
@@ -312,7 +312,7 @@
   (begin
       (if-account-closed-then-panic account-no)
       (unwrap! (get-receiver account-no) receiver-not-set)
-      (stx-transfer? amount tx-sender .m-of-n-escrow)
+      (stx-transfer? amount tx-sender .multisignature-escrow)
       (let ((balance 
                (+ amount 
                   (default-to u0 
@@ -340,7 +340,7 @@
                (if (is-receiver account-no)
                   (if (and (not (is-eq balance u0)) (<= amount balance))
                      (begin
-                        (as-contract (stx-transfer? balance .m-of-n-escrow sender))
+                        (as-contract (stx-transfer? balance .multisignature-escrow sender))
                         (ok (map-set account-balance 
                               ((account account-no)) 
                               ((balance (- balance amount))) 

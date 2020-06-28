@@ -9,13 +9,13 @@ const addrs = [
 	"SP30JX68J79SMTTN0D2KXQAJBFVYY56BZJEYS3X0B",
 	"SP138CBPVKYBQQ480EZXJQK89HCHY32XBQ0T4BCCD",
 ]
-describe("M of N Escrow Contract test suite", () => {
+describe("(M of N) MultiSignature Escrow Contract test suite", () => {
 	let escrowClient:  EscrowClient
 	let provider: Provider
 
 	before(async () => {
 		provider = await ProviderRegistry.createProvider()
-		escrowClient = new EscrowClient("SP3GWX3NE58KXHESRYE4DYQ1S31PQJTCRXB3PE9SB.m-of-n-escrow", "m-of-n-escrow", provider)
+		escrowClient = new EscrowClient("SP3GWX3NE58KXHESRYE4DYQ1S31PQJTCRXB3PE9SB.multisignature-escrow", "multisignature-escrow", provider)
 	})
 
 	it("should have a valid syntax", async () => {
@@ -46,7 +46,7 @@ describe("M of N Escrow Contract test suite", () => {
 	})
 
 
-	describe("create first m-of-n escrow account", () => {
+	describe("create first multisignature escrow account with `m` 2 and `n` 3", () => {
 
 		it("check number of open accounts after creating an escrow account", async () => {
 			// open a new escrow account 2-of-3

@@ -1,10 +1,10 @@
-# M-of-N Escrow Contract
-This contract is written in clarity extending basic [escrow@friedger](https://github.com/friedger/clarity-smart-contracts/blob/master/contracts/tokens/escrow.clar). 
+# (M-of-N) Multisignature Escrow Contract
+This contract is written in [clarity](https://docs.blockstack.org/core/smart/clarityRef.html) extending basic [escrow@friedger](https://github.com/friedger/clarity-smart-contracts/blob/master/contracts/tokens/escrow.clar) to support multisignature, multiple transactions (i.e. transaction or trade from same account per epoch), consensus of m among n participants. 
 
 ## Importance
 This escrow contract has functionalities designed for various use-cases. The main idea behind it, is importance of  the consensus of atleast M participants among N for moving the funds in a transparent way.
 
-People providing donation to NGOs and relief committee, put their trust in its members. But due to  bureaucracy, most members doesn't have say in how money is used. By bringing m-of-n escrow contract in picture, consensus is required for spending money. 
+People providing donation to NGOs and relief committee, put their trust in its members. But due to  bureaucracy, most members doesn't have say in how money is used. By bringing multisignature escrow contract in picture, consensus is required for spending money. 
 
 It can also be used for children' banking account, where atleast one of the parent consent is required for spending fund.    
 
